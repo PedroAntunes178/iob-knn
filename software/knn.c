@@ -9,14 +9,14 @@
 //#define cmwc_rand rand
 
 #ifdef DEBUG //type make DEBUG=1 to print debug info
-#define S 11  //random seed
-#define N 20  //data set size
-#define K 10   //number of neighbours (K)
+#define S 12  //random seed
+#define N 8  //data set size
+#define K 4   //number of neighbours (K)
 #define C 4   //number data classes
-#define M 3   //number samples to be classified
+#define M 2   //number samples to be classified
 #else
 #define S 12   
-#define N 100000
+#define N 10000
 #define K 10  
 #define C 4  
 #define M 100 
@@ -77,7 +77,7 @@ int main() {
   unsigned long long elapsed;
   unsigned int elapsedu;
 
-  //init uart and timer
+  //init uart
   uart_init(UART_BASE, FREQ/BAUD);
   uart_printf("\nInit timer\n");
   uart_txwait();
@@ -87,6 +87,8 @@ int main() {
 
   //generate random seed 
   random_init(S);
+
+   
 
   //init dataset
   for (int i=0; i<N; i++) {
@@ -126,11 +128,12 @@ int main() {
 
   //start knn here
 
-  timer_init(TIMER_BASE);
-  //read current timer count, compute elapsed time
+   //read current timer count, compute elapsed time
   //elapsed  = timer_get_count();
   //elapsedu = timer_time_us();
-
+  //init timer and knn periph
+  timer_init(TIMER_BASE);
+  knn_init(KNN_BASE);
 
   for (int k=0; k<M; k++) { //for all test points
     //compute distances to dataset points
@@ -213,9 +216,11 @@ int main() {
 
   //stop knn here
   //read current timer count, compute elapsed time
-  elapsedu = timer_time_us(TIMER_BASE);
-  uart_printf("\nExecution time: %dus @%dMHz\n\n", elapsedu, FREQ/1000000);
-
+#ifndef DEBUG
+  elapsed = timer_get_count();
+  elapsedu = timer_time_us();
+  uart_printf("\nExecution time: %dus (%d cycles @%dMHz)\n\n", elapsedu, (unsigned int)elapsed, FREQ/1000000);
+#endif
 
   //print classification distribution to check for statistical bias
   for (int l=0; l<C; l++)

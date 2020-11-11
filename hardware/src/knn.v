@@ -7,8 +7,10 @@ module knn_core
     )
    (
     `INPUT(KNN_ENABLE, 1),    
+    `INPUT(KNN_DATA_IN, DATA_W),
     `INPUT(clk, 1),
-    `INPUT(rst, 1)
+    `INPUT(rst, 1),
+    `OUTPUT(KNN_DATA_OUT, DATA_W)
     );
 
 
