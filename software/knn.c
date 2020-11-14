@@ -16,7 +16,7 @@
 #define M 2   //number samples to be classified
 #else
 #define S 12   
-#define N 10000
+#define N 1000
 #define K 10  
 #define C 4  
 #define M 100 
@@ -44,6 +44,8 @@ struct neighbor {
 #ifdef DEBUG
 unsigned long long t_distance[N];
 unsigned long long t_insert[N];
+unsigned long long t_distance_total;
+unsigned long long t_insert_total;
 unsigned long long t_vote;
 #endif
 
@@ -79,8 +81,8 @@ int main() {
 
   //init uart
   uart_init(UART_BASE, FREQ/BAUD);
-  uart_printf("\nInit timer\n");
-  uart_txwait();
+  //uart_printf("\nInit timer\n");
+  //uart_txwait();
 
   //int vote accumulator
   int votes_acc[C] = {0};
@@ -135,6 +137,11 @@ int main() {
   timer_init(TIMER_BASE);
   knn_init(KNN_BASE);
 
+#ifdef DEBUG
+  t_distance_total=0;
+  t_insert_total=0;
+#endif
+
   for (int k=0; k<M; k++) { //for all test points
     //compute distances to dataset points
 
@@ -157,6 +164,7 @@ int main() {
       unsigned int d = sq_dist(x[k], data[i]);
 #ifdef DEBUG
       t_distance[i]=timer_get_count();   
+      t_distance_total+=t_distance[i];
       timer_reset();
 #endif
       //insert in ordered list
@@ -168,6 +176,7 @@ int main() {
 
 #ifdef DEBUG
       t_insert[i]=timer_get_count();
+      t_insert_total+=t_insert[i];
       timer_reset();
       //dataset
       uart_printf("%d \t%d \t%d \t%d \t%d \t%d \t\t%d\n", i, data[i].x, data[i].y, data[i].label, d,  (unsigned int)t_distance[i], (unsigned int)t_insert[i]);
@@ -216,10 +225,11 @@ int main() {
 
   //stop knn here
   //read current timer count, compute elapsed time
-#ifndef DEBUG
+#ifdef DEBUG
   elapsed = timer_get_count();
   elapsedu = timer_time_us();
   uart_printf("\nExecution time: %dus (%d cycles @%dMHz)\n\n", elapsedu, (unsigned int)elapsed, FREQ/1000000);
+  uart_printf("\nDistance cycles: %d\n\nInsert cycles: %d\n", (unsigned int)t_distance_total, (unsigned int)t_insert_total);
 #endif
 
   //print classification distribution to check for statistical bias
